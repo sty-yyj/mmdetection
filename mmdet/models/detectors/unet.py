@@ -7,19 +7,25 @@ import cv2 as cv
 from mmdet.core import tensor2imgs
 from .. import builder
 from ..registry import DETECTORS
+from .test_mixins import SegTestMixin
 
 
 @DETECTORS.register_module
-class UNet(nn.Module):
+class UNet(nn.Module, SegTestMixin):
     def __init__(self,
                  backbone,
                  decoder,
+                 neck=None,
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
         super(UNet, self).__init__()
         self.backbone = builder.build_backbone(backbone)
         self.decoder = builder.build_decoder(decoder)
+        self.with_neck = False
+        if neck is not None:
+            self.neck = builder.build_neck(neck)
+            self.with_neck = True
 
         self.init_weights(pretrained=pretrained)
 
@@ -31,7 +37,7 @@ class UNet(nn.Module):
         self.decoder.init_weights()
 
     def forward_train(self, img, img_meta, gt_labels):
-        x = self.backbone(img)
+        x = self.extract_feat(img)
         img_size = img_meta[0]['img_shape'][:2]
         seg_pred = self.decoder(x, img_size)
         losses = dict()
@@ -39,14 +45,27 @@ class UNet(nn.Module):
         losses.update(loss_seg)
         return losses
 
-    def simple_test(self, img, img_meta, rescale=False):
+    def extract_feat(self, img):
         x = self.backbone(img)
+        if self.with_neck:
+            x = self.neck(x)
+        return x
+
+    def extract_feats(self, imgs):
+        assert isinstance(imgs, list)
+        for img in imgs:
+            yield self.extract_feat(img)
+
+    def simple_test(self, img, img_meta, rescale=False):
+        x = self.extract_feat(img)
         img_size = img_meta[0]['img_shape'][:2]
         seg_pred = self.decoder(x, img_size)
         return seg_pred.argmax(1)
 
-    def aug_test(self, img, img_meta, rescale=False):
-        raise NotImplementedError
+    def aug_test(self, imgs, img_metas, rescale=False):
+        seg_pred = self.aug_test_seg(
+            self.extract_feats(imgs), img_metas)
+        return seg_pred
 
     def forward_test(self, imgs, img_metas, **kwargs):
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:

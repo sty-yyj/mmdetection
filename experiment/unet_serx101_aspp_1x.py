@@ -10,16 +10,15 @@ model = dict(
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
-        style='pytorch',
-        dcn=dict(
-            modulated=False,
-            groups=32,
-            deformable_groups=1,
-            fallback_on_stride=False),
-        stage_with_dcn=(False, True, True, True)),
+        style='pytorch'),
+    neck=dict(
+        type='ASPP',
+        in_channels=[64, 256, 512, 1024, 2048],
+        out_channels=[32, 64, 128, 256, 512],
+        size=[128, 128, 64, 32, 16]),
     decoder=dict(
         type='UnetSCSE',
-        in_channels=[64, 256, 512, 1024, 2048],
+        in_channels=[32, 64, 128, 256, 512],
         num_filters=16,
         num_classes=4))
 # model training and testing settings
@@ -82,7 +81,7 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 data = dict(
     imgs_per_gpu=2,
-    workers_per_gpu=2,
+    workers_per_gpu=1,
     train=dict(
         type=dataset_type,
         img_prefix=data_root + 'jingwei_round1_train_20190619/image',
@@ -126,10 +125,10 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 15  # actual epoch = 4 * 3 = 12
+total_epochs = 12  # actual epoch = 4 * 3 = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/unet_x101_fpn_1x_jingwei_dcn'
+work_dir = './work_dirs/unet_x101_aspp_1x_all'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

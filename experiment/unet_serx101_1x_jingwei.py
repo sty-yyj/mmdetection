@@ -106,7 +106,7 @@ data = dict(
         test_mode=True,
         ann_file='data/jingwei_round1_train_20190619/label'))
 # optimizer
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
@@ -128,7 +128,7 @@ log_config = dict(
 total_epochs = 15  # actual epoch = 4 * 3 = 12
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/unet_x101_fpn_1x_jingwei_all'
+work_dir = './work_dirs/unet_x101_fpn_1x_jingwei_warmup'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
