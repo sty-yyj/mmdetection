@@ -8,6 +8,7 @@
 |   train   | flip(50%) | 512  |   ResNet50   |  SCSE   |    step0.01     | 0.2741 |
 | train+val | flip(50%) | 512  | SeResNext101 |   IBN   |    step0.01     | 0.3516 |
 | train+val | flip+rot  | 512  | SeResNext101 |  SCSE   |    step0.01     | 0.3303 |
+| train+val |flip+rot+affine| 512  | SeResNext101 |  SCSE   |    step0.01     | 0.3552 |
 ## TODO
 
 - [ ] mix up
